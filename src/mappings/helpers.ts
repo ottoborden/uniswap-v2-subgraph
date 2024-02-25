@@ -1,5 +1,5 @@
 /* eslint-disable prefer-const */
-import { log, BigInt, BigDecimal, Address, EthereumEvent } from '@graphprotocol/graph-ts'
+import { log, BigInt, BigDecimal, Address, ethereum } from '@graphprotocol/graph-ts'
 import { ERC20 } from '../types/Factory/ERC20'
 import { ERC20SymbolBytes } from '../types/Factory/ERC20SymbolBytes'
 import { ERC20NameBytes } from '../types/Factory/ERC20NameBytes'
@@ -33,7 +33,7 @@ export function bigDecimalExp18(): BigDecimal {
 }
 
 export function convertEthToDecimal(eth: BigInt): BigDecimal {
-  return eth.toBigDecimal().div(exponentToBigDecimal(18))
+  return eth.toBigDecimal().div(exponentToBigDecimal(BI_18))
 }
 
 export function convertTokenToDecimal(tokenAmount: BigInt, exchangeDecimals: BigInt): BigDecimal {
@@ -118,12 +118,12 @@ export function fetchTokenName(tokenAddress: Address): string {
 
 export function fetchTokenTotalSupply(tokenAddress: Address): BigInt {
   let contract = ERC20.bind(tokenAddress)
-  let totalSupplyValue = null
+  let totalSupplyValue = new BigInt(0)
   let totalSupplyResult = contract.try_totalSupply()
   if (!totalSupplyResult.reverted) {
-    totalSupplyValue = totalSupplyResult as i32
+    totalSupplyValue = totalSupplyResult.value
   }
-  return BigInt.fromI32(totalSupplyValue as i32)
+  return totalSupplyValue
 }
 
 export function fetchTokenDecimals(tokenAddress: Address): BigInt {
@@ -134,12 +134,12 @@ export function fetchTokenDecimals(tokenAddress: Address): BigInt {
 
   let contract = ERC20.bind(tokenAddress)
   // try types uint8 for decimals
-  let decimalValue = null
+  let decimalValue = new BigInt(0)
   let decimalResult = contract.try_decimals()
   if (!decimalResult.reverted) {
-    decimalValue = decimalResult.value
+    decimalValue = BigInt.fromI32(decimalResult.value)
   }
-  return BigInt.fromI32(decimalValue as i32)
+  return decimalValue
 }
 
 export function createLiquidityPosition(exchange: Address, user: Address): LiquidityPosition {
@@ -150,6 +150,9 @@ export function createLiquidityPosition(exchange: Address, user: Address): Liqui
   let liquidityTokenBalance = LiquidityPosition.load(id)
   if (liquidityTokenBalance === null) {
     let pair = Pair.load(exchange.toHexString())
+    if (pair === null) {
+      return new LiquidityPosition("0")
+    }
     pair.liquidityProviderCount = pair.liquidityProviderCount.plus(ONE_BI)
     liquidityTokenBalance = new LiquidityPosition(id)
     liquidityTokenBalance.liquidityTokenBalance = ZERO_BD
@@ -171,12 +174,33 @@ export function createUser(address: Address): void {
   }
 }
 
-export function createLiquiditySnapshot(position: LiquidityPosition, event: EthereumEvent): void {
+export function createLiquiditySnapshot(position: LiquidityPosition, event: ethereum.Event): void {
   let timestamp = event.block.timestamp.toI32()
   let bundle = Bundle.load('1')
+  if (bundle === null) {
+    return
+  }
   let pair = Pair.load(position.pair)
+  if (pair === null) {
+    return
+  }
   let token0 = Token.load(pair.token0)
+  if (token0 === null) {
+    return
+  }
   let token1 = Token.load(pair.token1)
+  if (token1 === null) {
+    return
+  }
+
+  let t0D = token0.derivedETH
+  if (t0D === null) {
+    return
+  }
+  let t1D = token1.derivedETH
+  if (t1D === null) {
+    return
+  }
 
   // create new snapshot
   let snapshot = new LiquidityPositionSnapshot(position.id.concat(timestamp.toString()))
@@ -185,8 +209,8 @@ export function createLiquiditySnapshot(position: LiquidityPosition, event: Ethe
   snapshot.block = event.block.number.toI32()
   snapshot.user = position.user
   snapshot.pair = position.pair
-  snapshot.token0PriceUSD = token0.derivedETH.times(bundle.ethPrice)
-  snapshot.token1PriceUSD = token1.derivedETH.times(bundle.ethPrice)
+  snapshot.token0PriceUSD = t0D.times(bundle.ethPrice)
+  snapshot.token1PriceUSD = t1D.times(bundle.ethPrice)
   snapshot.reserve0 = pair.reserve0
   snapshot.reserve1 = pair.reserve1
   snapshot.reserveUSD = pair.reserveUSD
