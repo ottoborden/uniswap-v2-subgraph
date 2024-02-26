@@ -11,7 +11,7 @@ import {
   Bundle
 } from '../types/schema'
 import { Pair as PairContract, Mint, Burn, Swap, Transfer, Sync } from '../types/templates/Pair/Pair'
-import { updatePairDayData, updateTokenDayData, updateUniswapDayData, updatePairHourData } from './dayUpdates'
+// import { updatePairDayData, updateTokenDayData, updateUniswapDayData, updatePairHourData } from './dayUpdates'
 import { getEthPriceInUSD, findEthPerToken, getTrackedVolumeUSD, getTrackedLiquidityUSD } from './pricing'
 import {
   convertTokenToDecimal,
@@ -385,11 +385,11 @@ export function handleMint(event: Mint): void {
   createLiquiditySnapshot(liquidityPosition, event)
 
   // update day entities
-  updatePairDayData(event)
-  updatePairHourData(event)
-  updateUniswapDayData(event)
-  updateTokenDayData(token0 as Token, event)
-  updateTokenDayData(token1 as Token, event)
+  // updatePairDayData(event)
+  // updatePairHourData(event)
+  // updateUniswapDayData(event)
+  // updateTokenDayData(token0 as Token, event)
+  // updateTokenDayData(token1 as Token, event)
 }
 
 export function handleBurn(event: Burn): void {
@@ -473,11 +473,11 @@ export function handleBurn(event: Burn): void {
   createLiquiditySnapshot(liquidityPosition, event)
 
   // update day entities
-  updatePairDayData(event)
-  updatePairHourData(event)
-  updateUniswapDayData(event)
-  updateTokenDayData(token0 as Token, event)
-  updateTokenDayData(token1 as Token, event)
+  // updatePairDayData(event)
+  // updatePairHourData(event)
+  // updateUniswapDayData(event)
+  // updateTokenDayData(token0 as Token, event)
+  // updateTokenDayData(token1 as Token, event)
 }
 
 export function handleSwap(event: Swap): void {
@@ -614,43 +614,43 @@ export function handleSwap(event: Swap): void {
   transaction.save()
 
   // update day entities
-  let pairDayData = updatePairDayData(event)
-  let pairHourData = updatePairHourData(event)
-  let uniswapDayData = updateUniswapDayData(event)
-  let token0DayData = updateTokenDayData(token0 as Token, event)
-  let token1DayData = updateTokenDayData(token1 as Token, event)
+  // let pairDayData = updatePairDayData(event)
+  // let pairHourData = updatePairHourData(event)
+  // let uniswapDayData = updateUniswapDayData(event)
+  // let token0DayData = updateTokenDayData(token0 as Token, event)
+  // let token1DayData = updateTokenDayData(token1 as Token, event)
 
-  // swap specific updating
-  uniswapDayData.dailyVolumeUSD = uniswapDayData.dailyVolumeUSD.plus(trackedAmountUSD)
-  uniswapDayData.dailyVolumeETH = uniswapDayData.dailyVolumeETH.plus(trackedAmountETH)
-  uniswapDayData.dailyVolumeUntracked = uniswapDayData.dailyVolumeUntracked.plus(derivedAmountUSD)
-  uniswapDayData.save()
+  // // swap specific updating
+  // uniswapDayData.dailyVolumeUSD = uniswapDayData.dailyVolumeUSD.plus(trackedAmountUSD)
+  // uniswapDayData.dailyVolumeETH = uniswapDayData.dailyVolumeETH.plus(trackedAmountETH)
+  // uniswapDayData.dailyVolumeUntracked = uniswapDayData.dailyVolumeUntracked.plus(derivedAmountUSD)
+  // uniswapDayData.save()
 
-  // swap specific updating for pair
-  pairDayData.dailyVolumeToken0 = pairDayData.dailyVolumeToken0.plus(amount0Total)
-  pairDayData.dailyVolumeToken1 = pairDayData.dailyVolumeToken1.plus(amount1Total)
-  pairDayData.dailyVolumeUSD = pairDayData.dailyVolumeUSD.plus(trackedAmountUSD)
-  pairDayData.save()
+  // // swap specific updating for pair
+  // pairDayData.dailyVolumeToken0 = pairDayData.dailyVolumeToken0.plus(amount0Total)
+  // pairDayData.dailyVolumeToken1 = pairDayData.dailyVolumeToken1.plus(amount1Total)
+  // pairDayData.dailyVolumeUSD = pairDayData.dailyVolumeUSD.plus(trackedAmountUSD)
+  // pairDayData.save()
 
-  // update hourly pair data
-  pairHourData.hourlyVolumeToken0 = pairHourData.hourlyVolumeToken0.plus(amount0Total)
-  pairHourData.hourlyVolumeToken1 = pairHourData.hourlyVolumeToken1.plus(amount1Total)
-  pairHourData.hourlyVolumeUSD = pairHourData.hourlyVolumeUSD.plus(trackedAmountUSD)
-  pairHourData.save()
+  // // update hourly pair data
+  // pairHourData.hourlyVolumeToken0 = pairHourData.hourlyVolumeToken0.plus(amount0Total)
+  // pairHourData.hourlyVolumeToken1 = pairHourData.hourlyVolumeToken1.plus(amount1Total)
+  // pairHourData.hourlyVolumeUSD = pairHourData.hourlyVolumeUSD.plus(trackedAmountUSD)
+  // pairHourData.save()
 
-  // swap specific updating for token0
-  token0DayData.dailyVolumeToken = token0DayData.dailyVolumeToken.plus(amount0Total)
-  token0DayData.dailyVolumeETH = token0DayData.dailyVolumeETH.plus(amount0Total.times(token1.derivedETH as BigDecimal))
-  token0DayData.dailyVolumeUSD = token0DayData.dailyVolumeUSD.plus(
-    amount0Total.times(token0.derivedETH as BigDecimal).times(bundle.ethPrice)
-  )
-  token0DayData.save()
+  // // swap specific updating for token0
+  // token0DayData.dailyVolumeToken = token0DayData.dailyVolumeToken.plus(amount0Total)
+  // token0DayData.dailyVolumeETH = token0DayData.dailyVolumeETH.plus(amount0Total.times(token1.derivedETH as BigDecimal))
+  // token0DayData.dailyVolumeUSD = token0DayData.dailyVolumeUSD.plus(
+  //   amount0Total.times(token0.derivedETH as BigDecimal).times(bundle.ethPrice)
+  // )
+  // token0DayData.save()
 
-  // swap specific updating
-  token1DayData.dailyVolumeToken = token1DayData.dailyVolumeToken.plus(amount1Total)
-  token1DayData.dailyVolumeETH = token1DayData.dailyVolumeETH.plus(amount1Total.times(token1.derivedETH as BigDecimal))
-  token1DayData.dailyVolumeUSD = token1DayData.dailyVolumeUSD.plus(
-    amount1Total.times(token1.derivedETH as BigDecimal).times(bundle.ethPrice)
-  )
-  token1DayData.save()
+  // // swap specific updating
+  // token1DayData.dailyVolumeToken = token1DayData.dailyVolumeToken.plus(amount1Total)
+  // token1DayData.dailyVolumeETH = token1DayData.dailyVolumeETH.plus(amount1Total.times(token1.derivedETH as BigDecimal))
+  // token1DayData.dailyVolumeUSD = token1DayData.dailyVolumeUSD.plus(
+  //   amount1Total.times(token1.derivedETH as BigDecimal).times(bundle.ethPrice)
+  // )
+  // token1DayData.save()
 }
